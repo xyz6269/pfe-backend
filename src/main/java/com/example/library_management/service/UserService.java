@@ -93,6 +93,11 @@ public class UserService {
         return target.getCart();
     }
 
+    public List<Book> checkMyCart() {
+        User currentUser = authenticationService.getCurrentUser();
+        return currentUser.getCart();
+    }
+
 
 
 

@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.security.PublicKey;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -28,12 +29,12 @@ public class OrderService {
     public void createOrder() {
         log.info("tf now");
         User currentUser = authenticationService.getCurrentUser();
-        if(currentUser.getOrder() != null) {
+        if (currentUser.getOrder() != null) {
             throw new RuntimeException("you already submitted an ordered that is still being processed");
         }
         log.info(String.valueOf(currentUser));
         log.info("testetestest");
-        if (currentUser.getCart() == null){
+        if (currentUser.getCart() == null) {
             throw new RuntimeException("you're cart is empty");
         }
         Order order = new Order();
@@ -48,11 +49,12 @@ public class OrderService {
                 .build();
 
         log.info(order.toString());
+
         orderRepository.save(order);
     }
 
     public List<Book> orderDetails(Long id) {
-        Order targetOrder = orderRepository.findById(id).orElseThrow(()-> new RuntimeException("this user hasn't submitted an order yet"));
+        Order targetOrder = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("this user hasn't submitted an order yet"));
         User orderUser = targetOrder.getUser();
 
         return userService.getUserCart(orderUser.getId());
@@ -60,7 +62,7 @@ public class OrderService {
 
     public String rejectOrder(Long id) {
         log.info("elon MID");
-        Order orderToReject = orderRepository.findById(id).orElseThrow(()-> new RuntimeException("no order"));
+        Order orderToReject = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("no order"));
         User orderUser = orderToReject.getUser();
         orderRepository.delete(orderToReject);
         orderUser.getCart().clear();
@@ -73,57 +75,25 @@ public class OrderService {
     }
 
     public String validateOrder(Long id) {
-        Order userOrder =orderRepository.findById(id).orElseThrow(()-> new RuntimeException("no order"));
-        OrderTimer orderTimer = OrderTimer.builder()
-                .order(userOrder)
-                .pickUpDuration(new Date(System.currentTimeMillis()+ 1000*60*60*24))
-                .build();
+        Order userOrder = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("no order"));
+        userOrder.setCreatedAt(LocalDateTime.now());
+        orderRepository.save(userOrder);
 
         return "your order has been validated come pick it up before";
     }
 
-/*
-    public void deleteOrder(Cart order) {
-        orderRepository.delete(orderRepository.findById(order.getId()).orElseThrow(()-> new RuntimeException("NO order with this id: "+order.getId())));
+    public void pickUpOrder(Long orderId) {
+        Order targetOrder = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("no order"));
+        LocalDateTime no = targetOrder.getCreatedAt();
+        //long time = 24*3600;ong time = 24*3600;
+        //long diff = (long) (LocalDateTime.now() - targetOrder.getCreatedAt().plusSeconds(time));
+        long time =  3600;
+        LocalDateTime end = no.plusSeconds(time);
+
+        if (no.getDayOfMonth() >= end.getDayOfMonth()
+                && no.getHour() >= end.getHour()
+                && no.getMinute() >= end.getMinute()) {
+            orderRepository.delete(targetOrder);
+        }
     }
-
-    public Cart getOrderbyId(long id) {
-        return orderRepository.findById(id).orElseThrow(()-> new RuntimeException("NO order with this id: "+id));
-    }
-
-    public List<Cart> getAllOrders() {
-        return orderRepository.findAll();
-    }
-
-    public String ValditeOrder(long id) {
-        orderRepository.findById(id);
-
-        return "this order has been validated by the administration " +
-                "please head to library on site to claim it";
-    }
-
-    public String RejectOrder(long id) {
-        deleteOrder(orderRepository.findById(id).orElseThrow(()-> new RuntimeException()));
-
-        return "this order has been unfortunately rejected by the system";
-    }
-
-    public List<Book> getOrder(String orderNumber) {
-       return orderRepository
-               .findByOrderNumber(orderNumber)
-               .orElseThrow(RuntimeException::new)
-               .getOrderedBooksList();
-    }
-
-    public Book maptoOrder(BooksDto orderedItemsDto) {
-        Book orderedBooks = Book.builder()
-                .id(orderedItemsDto.getId())
-                .isbn(orderedItemsDto.getIsbn())
-                .price(orderedItemsDto.getPrice())
-        .build();
-        return orderedBooks;
-    }
-
- */
-
 }

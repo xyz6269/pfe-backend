@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -22,6 +23,7 @@ public class Order {
     @Column(nullable = false)
     private String orderNumber;
     private String orderOwner;
+    private LocalDateTime createdAt;
     @OneToOne
     @JsonIgnore
     private User user;

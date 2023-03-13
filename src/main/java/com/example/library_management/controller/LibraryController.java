@@ -69,10 +69,10 @@ public class LibraryController {
     public List<Book> checkUserCart(@PathVariable("id") Long id) {
         return userService.getUserCart(id);
     }
-    @GetMapping("/user/cart/{id}")
+    @GetMapping("/user/cart")
     @ResponseStatus(HttpStatus.OK)
-    public List<Book> getBYUsers(@PathVariable("id") Long id) {
-        return userService.getUserCart(id);
+    public List<Book> getBYUsers() {
+        return userService.checkMyCart();
     }
 
 
@@ -102,6 +102,11 @@ public class LibraryController {
     public ResponseEntity<String> rejectOrder(@PathVariable("id") Long id) {
         return ResponseEntity.ok(orderService.rejectOrder(id));
     }
+    @PostMapping("/admin/validate/{id}")
+    public String validateOrder(@PathVariable("id") Long id) {
+         return orderService.validateOrder(id);
+    }
+
 
 
 
