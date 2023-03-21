@@ -27,9 +27,9 @@ public class Order {
     @OneToOne
     @JsonIgnore
     private User user;
-    @OneToOne()
+    @ManyToOne()
     @JsonIgnore
-    private OrderTimer timer;
+    private History ordersHistory;
     @JsonIgnore
     private Boolean isOrderValid;
 

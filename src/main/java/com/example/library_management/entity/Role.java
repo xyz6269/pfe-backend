@@ -20,7 +20,7 @@ public class Role {
     private long id;
     @Column(nullable = false,unique = true)
     private String name;
-    @ManyToMany (cascade = CascadeType.ALL,mappedBy="roles")
+    @ManyToMany (mappedBy="roles")
     @JsonIgnore
     private List<User> users;
 

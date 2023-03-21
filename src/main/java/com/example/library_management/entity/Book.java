@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +25,7 @@ public class Book {
     @Column(nullable = false)
     private String isbn;
     private Integer quantity;
-    @ManyToMany(cascade = CascadeType.ALL)
+    @ManyToOne()
     @JsonIgnore
-    private List<User> users = new ArrayList<>();
+    private User user;
 }

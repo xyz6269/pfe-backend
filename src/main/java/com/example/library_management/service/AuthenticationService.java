@@ -6,7 +6,9 @@ import com.example.library_management.DTO.AuthenticationResponse;
 import com.example.library_management.DTO.RegisterRequest;
 import com.example.library_management.config.ApplicationConfig;
 import com.example.library_management.config.JwtService;
+import com.example.library_management.entity.BannedUser;
 import com.example.library_management.entity.User;
+import com.example.library_management.repository.BanList;
 import com.example.library_management.repository.RoleRepository;
 import com.example.library_management.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
+import java.util.Optional;
+
 
 @Service
 @RequiredArgsConstructor
@@ -29,9 +33,15 @@ public class AuthenticationService {
     private final RoleRepository roleRepository;
     private final JwtService jwtService;
     private final ApplicationConfig applicationConfig;
+    private final BanList banList;
 
     public AuthenticationResponse register(RegisterRequest request) {
         log.info(request.toString());
+        if (userRepository.findByEmail(request.getEmail()).isPresent()){
+            throw new RuntimeException("user already exists");
+        }
+        isUserBanned(request.getEmail());
+
         User newUser = User.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
@@ -49,6 +59,7 @@ public class AuthenticationService {
 
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
         log.info(request.toString());
+        isUserBanned(request.getEmail());
         applicationConfig.authenticationProvider().authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(),request.getPassword())
         );
@@ -58,6 +69,11 @@ public class AuthenticationService {
         var jwtToken = jwtService.generateToken(user);
 
         return AuthenticationResponse.builder().token(jwtToken).build();
+    }
+
+    public void isUserBanned(String email) {
+        Optional<BannedUser> exist = banList.findBannedUserByUserEmail(email);
+        if (exist.isPresent()) throw new RuntimeException("this email permanently banned");
     }
 
     @Transactional(readOnly = true)

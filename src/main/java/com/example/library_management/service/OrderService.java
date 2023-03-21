@@ -34,7 +34,8 @@ public class OrderService {
         }
         log.info(String.valueOf(currentUser));
         log.info("testetestest");
-        if (currentUser.getCart() == null) {
+        log.info(currentUser.getCart().toString());
+        if (currentUser.getCart().isEmpty()) {
             throw new RuntimeException("you're cart is empty");
         }
         Order order = new Order();
@@ -44,10 +45,10 @@ public class OrderService {
 
 
         Notifications newNoti = Notifications.builder()
-                .text("your order has been sublited")
+                .text("your order has been submited")
                 .user(currentUser)
                 .build();
-
+        currentUser.getNotifications().add(newNoti);
         log.info(order.toString());
 
         orderRepository.save(order);
@@ -71,19 +72,30 @@ public class OrderService {
                 .text("your order was unfortunately rejected by the administration try again alternatively")
                 .build();
         notificationRepository.save(rejectionNoti);
+        orderUser.getNotifications().add(rejectionNoti);
         return "your order has been terminated by the system";
     }
 
     public String validateOrder(Long id) {
         Order userOrder = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("no order"));
         userOrder.setCreatedAt(LocalDateTime.now());
+        userOrder.setIsOrderValid(true);
         orderRepository.save(userOrder);
+        pickUpOrder(userOrder.getId());
 
         return "your order has been validated come pick it up before";
     }
 
-    public void pickUpOrder(Long orderId) {
+    public boolean checkIsValide(Order order) {
+        return order.getIsOrderValid();
+    }
+
+    public String pickUpOrder(Long orderId) {
         Order targetOrder = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("no order"));
+        if (!checkIsValide(targetOrder)) {
+            throw new RuntimeException("this order hasn't been validated");
+        }
+
         LocalDateTime no = targetOrder.getCreatedAt();
         //long time = 24*3600;ong time = 24*3600;
         //long diff = (long) (LocalDateTime.now() - targetOrder.getCreatedAt().plusSeconds(time));
@@ -94,6 +106,8 @@ public class OrderService {
                 && no.getHour() >= end.getHour()
                 && no.getMinute() >= end.getMinute()) {
             orderRepository.delete(targetOrder);
-        }
+            return "your too late to pickup your order";
+        }else return "come pick up you're order";
+
     }
 }

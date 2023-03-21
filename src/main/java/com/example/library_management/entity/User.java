@@ -37,20 +37,17 @@ public class User implements UserDetails {
             joinColumns = {@JoinColumn(name = "USER_ID", referencedColumnName = "ID")},
             inverseJoinColumns = {@JoinColumn(name = "ROLE_ID", referencedColumnName = "ID")})
     private List<Role> roles = new ArrayList<>();
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-            name = "user_books",
-            joinColumns = @JoinColumn(name = "USER_ID"),
-            inverseJoinColumns = @JoinColumn(name = "book_id"))
-    private List<Book> cart = new ArrayList<>();
+    @OneToMany(cascade = CascadeType.ALL,orphanRemoval = true, mappedBy = "user")
+    private List<Book> cart ;
     @OneToOne(mappedBy = "user")
     @JsonIgnore
     private Order Order ;
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany(fetch = FetchType.LAZY,cascade = CascadeType.ALL, mappedBy = "user")
     @JsonIgnore
     private List<Notifications> notifications = new ArrayList<>();
-
-
+    @OneToOne(cascade = CascadeType.ALL)
+    @JsonIgnore
+    private History userHistory;
 
     //-------------------------------------------------USERDETAILSIMPL----------------------------------------------------------------------------------------------
     @Override

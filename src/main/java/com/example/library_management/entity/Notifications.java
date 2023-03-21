@@ -22,7 +22,7 @@ public class Notifications {
     @Column(nullable = false)
     private String text;
     private Date customDate;
-    @ManyToOne
+    @ManyToOne()
     @JsonIgnore
     private User user;
 }
