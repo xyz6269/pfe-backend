@@ -25,7 +25,7 @@ public class Book {
     @Column(nullable = false)
     private String isbn;
     private Integer quantity;
-    @ManyToOne()
+    @ManyToMany
     @JsonIgnore
-    private User user;
+    private List<User> user;
 }

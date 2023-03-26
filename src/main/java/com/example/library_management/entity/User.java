@@ -37,8 +37,8 @@ public class User implements UserDetails {
             joinColumns = {@JoinColumn(name = "USER_ID", referencedColumnName = "ID")},
             inverseJoinColumns = {@JoinColumn(name = "ROLE_ID", referencedColumnName = "ID")})
     private List<Role> roles = new ArrayList<>();
-    @OneToMany(cascade = CascadeType.ALL,orphanRemoval = true, mappedBy = "user")
-    private List<Book> cart ;
+    @ManyToMany(fetch = FetchType.EAGER ,cascade = CascadeType.ALL)
+    private List<Book> books;
     @OneToOne(mappedBy = "user")
     @JsonIgnore
     private Order Order ;
@@ -48,6 +48,10 @@ public class User implements UserDetails {
     @OneToOne(cascade = CascadeType.ALL)
     @JsonIgnore
     private History userHistory;
+    public void addBooktoCart(Book book) {
+        this.books.add(book);
+        book.getUser().add(this);
+    }
 
     //-------------------------------------------------USERDETAILSIMPL----------------------------------------------------------------------------------------------
     @Override
@@ -57,6 +61,9 @@ public class User implements UserDetails {
                 .collect(Collectors.toList());
         return mapRoles;
     }
+     public void clear () {
+        this.books.clear();
+     }
 
     @Override
     @JsonIgnore
@@ -95,7 +102,10 @@ public class User implements UserDetails {
     }
 
     public boolean checkIfExistBook(Book book) {
-        return cart.contains(book);
+        return books.contains(book);
     }
 
 }
+
+//    "firstName": "idk",
+//    "lastName" : "lmao",

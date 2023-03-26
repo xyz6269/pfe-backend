@@ -1,6 +1,7 @@
 package com.example.library_management.service;
 
 import com.example.library_management.entity.*;
+import com.example.library_management.repository.BooksRepository;
 import com.example.library_management.repository.NotificationRepository;
 import com.example.library_management.repository.OrderRepository;
 import com.example.library_management.repository.UserRepository;
@@ -25,6 +26,7 @@ public class OrderService {
     private final AuthenticationService authenticationService;
     private final NotificationRepository notificationRepository;
     private final UserService userService;
+    private final BooksRepository booksRepository;
 
     public void createOrder() {
         log.info("tf now");
@@ -34,8 +36,8 @@ public class OrderService {
         }
         log.info(String.valueOf(currentUser));
         log.info("testetestest");
-        log.info(currentUser.getCart().toString());
-        if (currentUser.getCart().isEmpty()) {
+        log.info(currentUser.getBooks().toString());
+        if (currentUser.getBooks().isEmpty()) {
             throw new RuntimeException("you're cart is empty");
         }
         Order order = new Order();
@@ -48,7 +50,7 @@ public class OrderService {
                 .text("your order has been submited")
                 .user(currentUser)
                 .build();
-        currentUser.getNotifications().add(newNoti);
+        //currentUser.getNotifications().add(newNoti);
         log.info(order.toString());
 
         orderRepository.save(order);
@@ -63,27 +65,35 @@ public class OrderService {
 
     public String rejectOrder(Long id) {
         log.info("elon MID");
-        Order orderToReject = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("no order"));
+        Order orderToReject = orderRepository.findById(id).orElseThrow(()-> new RuntimeException("no order"));
         User orderUser = orderToReject.getUser();
+        orderUser.getBooks().forEach(book -> book.getUser().remove(orderUser));
+        orderUser.getBooks().clear();
         orderRepository.delete(orderToReject);
-        orderUser.getCart().clear();
-        Notifications rejectionNoti = Notifications.builder()
-                .user(orderUser)
-                .text("your order was unfortunately rejected by the administration try again alternatively")
-                .build();
-        notificationRepository.save(rejectionNoti);
-        orderUser.getNotifications().add(rejectionNoti);
         return "your order has been terminated by the system";
     }
 
     public String validateOrder(Long id) {
         Order userOrder = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("no order"));
         userOrder.setCreatedAt(LocalDateTime.now());
+        userOrder.setEndTime(userOrder.getCreatedAt().plusDays(7));
         userOrder.setIsOrderValid(true);
         orderRepository.save(userOrder);
         pickUpOrder(userOrder.getId());
 
         return "your order has been validated come pick it up before";
+    }
+    public void refresh() {
+        final List<Order> orders = orderRepository.findAll();
+        orders.stream().filter(order -> order.getEndTime().compareTo(LocalDateTime.now()) <= 0).map(Order::getId).forEach(this::punishUser);
+        orders.forEach(order -> order.getEndTime().equals(LocalDateTime.now()));
+    }
+
+    private void punishUser(Long id) {
+        Order orderToreject = orderRepository.findById(id).orElseThrow(()-> new RuntimeException("no order"));
+        User userToban = orderToreject.getUser();
+        userService.banUser(userToban.getId());
+
     }
 
     public boolean checkIsValide(Order order) {
@@ -110,4 +120,6 @@ public class OrderService {
         }else return "come pick up you're order";
 
     }
+
+
 }

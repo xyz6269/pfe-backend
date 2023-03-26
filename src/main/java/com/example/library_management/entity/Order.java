@@ -24,6 +24,7 @@ public class Order {
     private String orderNumber;
     private String orderOwner;
     private LocalDateTime createdAt;
+    private LocalDateTime endTime;
     @OneToOne
     @JsonIgnore
     private User user;

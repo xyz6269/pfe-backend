@@ -46,8 +46,10 @@ public class BookService {
     }
     public void removeBook(Long bookId) {
         Book booktoRemove = getBookbyId(bookId);
-
+        booktoRemove.getUser().forEach(user -> user.getBooks().remove(booktoRemove));
+        booktoRemove.getUser().clear();
         booksRepository.delete(booktoRemove);
+
     }
 
 
